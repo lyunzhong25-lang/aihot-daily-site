@@ -1,0 +1,21 @@
+name: Feishu Smoke Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send simple Feishu text
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: |
+          test -n "$FEISHU_WEBHOOK"
+          curl -sS -X POST "$FEISHU_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -d '{"msg_type":"text","content":{"text":"AI HOT 飞书测试：这是一条 GitHub Actions 发送的定时校准测试消息。"}}'
+          echo

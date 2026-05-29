@@ -1,0 +1,64 @@
+name: AI HOT Daily
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 0 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-deploy-push:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Build site and image
+        run: npm run build
+        env:
+          IMG2_API_KEY: ${{ secrets.IMG2_API_KEY }}
+          IMG2_API_URL: ${{ secrets.IMG2_API_URL }}
+          IMG2_MODEL: ${{ secrets.IMG2_MODEL }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Push to Feishu
+        run: npm run send:feishu
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
+          PAGES_BASE_URL: ${{ steps.deployment.outputs.page_url }}

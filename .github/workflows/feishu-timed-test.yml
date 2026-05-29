@@ -1,0 +1,47 @@
+name: Feishu Timed Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send timed Feishu test
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: |
+          node <<'NODE'
+          const cleanEnv = (value) => String(value || "").replace(/^\uFEFF/, "").trim();
+          const webhook = cleanEnv(process.env.FEISHU_WEBHOOK);
+          if (!webhook) throw new Error("FEISHU_WEBHOOK is empty");
+          const bj = new Intl.DateTimeFormat("zh-CN", {
+            timeZone: "Asia/Shanghai",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+          }).format(new Date());
+          const payload = {
+            msg_type: "text",
+            content: {
+              text: `AI HOT 定时测试：这条消息由 GitHub Actions 在北京时间 ${bj} 发送。收到就说明飞书推送链路正常。`
+            }
+          };
+          const response = await fetch(webhook, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const text = await response.text();
+          console.log(`Feishu timed test response: ${text}`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const json = JSON.parse(text);
+          if (json.code !== 0 && json.StatusCode !== 0) throw new Error(text);
+          NODE

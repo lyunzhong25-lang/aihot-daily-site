@@ -3,7 +3,7 @@ name: Timezone Check
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 3 29 5 *"
+    - cron: "*/5 * * * *"
 
 permissions:
   contents: read

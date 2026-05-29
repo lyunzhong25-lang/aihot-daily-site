@@ -25,14 +25,14 @@ FEISHU_WEBHOOK      飞书自定义机器人的 webhook
 FEISHU_SECRET       可选，飞书机器人签名 secret
 IMG2_API_KEY        img2 / OpenAI-compatible 图片接口 key
 IMG2_API_URL        可选，默认 https://api.openai.com/v1/images/generations
-IMG2_MODEL          可选，默认 gpt-image-1
+IMG2_MODEL          可选，默认 gpt-image-2
 ```
 
 如果没有配置 `IMG2_API_KEY`，构建脚本会用 HTML/CSS 截图生成兜底日报图。
 
 ## GitHub Pages
 
-Actions 工作流每天北京时间 08:30 运行一次，也可以手动触发。首次使用前，在 GitHub 仓库的 `Settings -> Pages` 里把 Source 设为 `GitHub Actions`。
+Actions 工作流每天北京时间 09:00 运行一次，也可以手动触发。首次使用前，在 GitHub 仓库的 `Settings -> Pages` 里把 Source 设为 `GitHub Actions`。
 
 ## AI HOT API
 

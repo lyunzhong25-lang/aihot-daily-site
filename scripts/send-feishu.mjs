@@ -59,7 +59,7 @@ function makePayload(data, baseUrl) {
       elements: [
         {
           tag: "markdown",
-          content: `今日共抓取 **${data.items.length}** 条精选动态。\n\n${lines}\n\n日报图片：${imageUrl}`
+          content: `今日共抓取 **${data.items.length}** 条精选动态，已排除行业和论文板块。\n\n${lines}\n\n日报图片：${imageUrl}`
         },
         {
           tag: "action",

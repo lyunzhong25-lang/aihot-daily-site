@@ -13,9 +13,24 @@ const dataDir = resolve(publicDir, "data");
 const AIHOT_BASE_URL = "https://aihot.virxact.com";
 const HOURS = Number(process.env.SINCE_HOURS || 24);
 const TAKE = Number(process.env.AIHOT_TAKE || 80);
+const excludedCategories = new Set(["industry", "paper", "research"]);
 
 function cleanEnv(value) {
   return String(value || "").replace(/^\uFEFF/, "").trim();
+}
+
+function normalizeImageApiUrl(value) {
+  if (!value) return "";
+  const url = new URL(value);
+  const path = url.pathname.replace(/\/+$/, "");
+  if (!path || path === "/") {
+    url.pathname = "/v1/images/generations";
+  } else if (path === "/v1") {
+    url.pathname = "/v1/images/generations";
+  } else if (path === "/v1/images") {
+    url.pathname = "/v1/images/generations";
+  }
+  return url.toString();
 }
 
 const categoryLabels = {
@@ -96,17 +111,20 @@ async function fetchAihotData() {
     fetchJson(new URL("/api/public/daily", AIHOT_BASE_URL))
   ]);
 
-  const items = (itemsResponse.items || []).map((item) => ({
-    id: item.id,
-    title: item.title || item.title_en || "未命名动态",
-    titleEn: item.title_en || "",
-    url: item.url,
-    source: item.source,
-    publishedAt: item.publishedAt,
-    summary: item.summary || "",
-    category: item.category || "other",
-    categoryLabel: categoryLabels[item.category] || "其他"
-  }));
+  const allItems = itemsResponse.items || [];
+  const items = allItems
+    .filter((item) => !excludedCategories.has(item.category || "other"))
+    .map((item) => ({
+      id: item.id,
+      title: item.title || item.title_en || "未命名动态",
+      titleEn: item.title_en || "",
+      url: item.url,
+      source: item.source,
+      publishedAt: item.publishedAt,
+      summary: item.summary || "",
+      category: item.category || "other",
+      categoryLabel: categoryLabels[item.category] || "其他"
+    }));
 
   return {
     meta: {
@@ -115,6 +133,8 @@ async function fetchAihotData() {
       windowEnd: now.toISOString(),
       hours: HOURS,
       itemCount: items.length,
+      rawItemCount: allItems.length,
+      excludedCategories: [...excludedCategories],
       source: AIHOT_BASE_URL
     },
     items,
@@ -177,10 +197,10 @@ async function generateWithImg2(prompt, destination) {
   if (!apiKey) return false;
 
   const apiUrl =
-    cleanEnv(process.env.IMG2_API_URL) ||
+    normalizeImageApiUrl(cleanEnv(process.env.IMG2_API_URL)) ||
     cleanEnv(process.env.OPENAI_IMAGE_API_URL) ||
     "https://api.openai.com/v1/images/generations";
-  const model = cleanEnv(process.env.IMG2_MODEL) || "gpt-image-1";
+  const model = cleanEnv(process.env.IMG2_MODEL) || "gpt-image-2";
   const size = cleanEnv(process.env.IMG2_SIZE) || "1080x1440";
 
   const response = await fetch(apiUrl, {

@@ -6,6 +6,10 @@ import { fileURLToPath } from "node:url";
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
+function cleanEnv(value) {
+  return String(value || "").replace(/^\uFEFF/, "").trim();
+}
+
 function signFeishu(timestamp, secret) {
   const key = `${timestamp}\n${secret}`;
   return createHmac("sha256", key).update("").digest("base64");
@@ -86,8 +90,8 @@ function makePayload(data, baseUrl) {
 }
 
 async function main() {
-  const webhook = process.env.FEISHU_WEBHOOK;
-  const baseUrl = process.env.PAGES_BASE_URL;
+  const webhook = cleanEnv(process.env.FEISHU_WEBHOOK);
+  const baseUrl = cleanEnv(process.env.PAGES_BASE_URL);
 
   if (!webhook) {
     console.log("FEISHU_WEBHOOK is not set, skip push.");
@@ -99,7 +103,7 @@ async function main() {
 
   const data = await loadLatest();
   const payload = makePayload(data, baseUrl);
-  const secret = process.env.FEISHU_SECRET;
+  const secret = cleanEnv(process.env.FEISHU_SECRET);
   if (secret) {
     const timestamp = Math.floor(Date.now() / 1000);
     payload.timestamp = String(timestamp);

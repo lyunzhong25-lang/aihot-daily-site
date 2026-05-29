@@ -14,6 +14,10 @@ const AIHOT_BASE_URL = "https://aihot.virxact.com";
 const HOURS = Number(process.env.SINCE_HOURS || 24);
 const TAKE = Number(process.env.AIHOT_TAKE || 80);
 
+function cleanEnv(value) {
+  return String(value || "").replace(/^\uFEFF/, "").trim();
+}
+
 const categoryLabels = {
   "ai-models": "模型",
   "ai-products": "产品",
@@ -169,15 +173,15 @@ async function downloadFile(url, destination) {
 }
 
 async function generateWithImg2(prompt, destination) {
-  const apiKey = process.env.IMG2_API_KEY || process.env.OPENAI_API_KEY;
+  const apiKey = cleanEnv(process.env.IMG2_API_KEY || process.env.OPENAI_API_KEY);
   if (!apiKey) return false;
 
   const apiUrl =
-    process.env.IMG2_API_URL ||
-    process.env.OPENAI_IMAGE_API_URL ||
+    cleanEnv(process.env.IMG2_API_URL) ||
+    cleanEnv(process.env.OPENAI_IMAGE_API_URL) ||
     "https://api.openai.com/v1/images/generations";
-  const model = process.env.IMG2_MODEL || "gpt-image-1";
-  const size = process.env.IMG2_SIZE || "1080x1440";
+  const model = cleanEnv(process.env.IMG2_MODEL) || "gpt-image-1";
+  const size = cleanEnv(process.env.IMG2_SIZE) || "1080x1440";
 
   const response = await fetch(apiUrl, {
     method: "POST",

@@ -4,9 +4,11 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 1 * * *"
+    - cron: "10 1 * * *"
+    - cron: "30 1 * * *"
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -31,13 +33,20 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Check daily send marker
+        id: sent-check
+        run: node scripts/check-sent.mjs
+
       - name: Install dependencies
+        if: steps.sent-check.outputs.skip != 'true'
         run: npm ci
 
       - name: Install browser
+        if: steps.sent-check.outputs.skip != 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Build site and image
+        if: steps.sent-check.outputs.skip != 'true'
         run: npm run build
         env:
           IMG2_API_KEY: ${{ secrets.IMG2_API_KEY }}
@@ -45,20 +54,34 @@ jobs:
           IMG2_MODEL: ${{ secrets.IMG2_MODEL }}
 
       - name: Configure Pages
+        if: steps.sent-check.outputs.skip != 'true'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: steps.sent-check.outputs.skip != 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: public
 
       - name: Deploy Pages
+        if: steps.sent-check.outputs.skip != 'true'
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Push to Feishu
+        if: steps.sent-check.outputs.skip != 'true'
         run: npm run send:feishu
         env:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
           PAGES_BASE_URL: ${{ steps.deployment.outputs.page_url }}
+
+      - name: Mark daily send success
+        if: steps.sent-check.outputs.skip != 'true'
+        run: |
+          node scripts/mark-sent.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .daily-state/last-sent.json
+          git commit -m "Mark AI HOT daily sent [skip ci]" || echo "No marker changes"
+          git push

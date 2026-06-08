@@ -1,9 +1,9 @@
 {
-  "date": "2026-06-07",
-  "sentAt": "2026-06-07T00:02:35.069Z",
-  "eventName": "workflow_dispatch",
-  "runId": "27077480123",
-  "sha": "1433f0c7449630b921af00f81c98c19826ab8e2b",
+  "date": "2026-06-08",
+  "sentAt": "2026-06-08T05:28:05.928Z",
+  "eventName": "schedule",
+  "runId": "27117868485",
+  "sha": "4b06682b60b021687b40d4cb10190aa3abf17a69",
   "imageGeneratedBy": "fallback",
-  "generatedAt": "2026-06-07T00:02:22.103Z"
+  "generatedAt": "2026-06-08T05:27:52.343Z"
 }
